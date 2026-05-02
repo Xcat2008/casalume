@@ -1,0 +1,362 @@
+import React, { useEffect, useMemo, useState } from "react";
+import ReactDOM from "react-dom/client";
+import "./styles.css";
+import { RealisticHouse3D } from "./components/RealisticHouse3D";
+
+type Room = { id: number; key?: string; name: string; icon?: string };
+type Device = {
+  deviceId: string;
+  name: string;
+  brand: string;
+  model: string;
+  protocol: string;
+  ip: string;
+  roomId: number | null;
+  roomName?: string;
+  type: string;
+  normalizedType?: string;
+  capabilities?: string[];
+  online: number;
+  stateJson?: string | null;
+  power?: number | null;
+};
+type Health = { version: string; phase: string; services: Record<string, string> };
+type ZigbeeStatus = { bridge: string; permitJoin: boolean; devices: number; coordinator: string };
+
+function parseState(device: Device) {
+  try { return device.stateJson ? JSON.parse(device.stateJson) : null; } catch { return null; }
+}
+
+function isOn(device: Device) {
+  const state = parseState(device);
+  return Boolean(state?.output ?? state?.ison ?? false);
+}
+
+function roomKey(room?: Room) {
+  return (room?.key ?? room?.name ?? "").toLowerCase();
+}
+
+function deviceTypeLabel(type?: string) {
+  const labels: Record<string, string> = {
+    light: "Luz",
+    switch: "Interruptor",
+    plug: "Tomada",
+    relay: "Relé",
+    sensor_temperature: "Sensor temperatura",
+    sensor_humidity: "Sensor humidade",
+    sensor_motion: "Sensor movimento",
+    sensor_door: "Sensor porta/janela",
+    climate: "Climatização",
+    tv: "Televisão",
+    cover: "Estore / portão",
+    battery: "Bateria",
+    solar_inverter: "Inversor solar",
+    meter: "Medidor energia",
+    camera: "Câmara",
+    unknown: "Desconhecido"
+  };
+  return labels[type ?? "unknown"] ?? "Desconhecido";
+}
+
+function roomVisual(room?: Room) {
+  const key = roomKey(room);
+  if (key.includes("sala")) return "🛋️";
+  if (key.includes("cozinha")) return "🍽️";
+  if (key.includes("quarto")) return "🛏️";
+  if (key.includes("banho")) return "🚿";
+  if (key.includes("solar")) return "☀️";
+  return "🏠";
+}
+
+function App() {
+  const [health, setHealth] = useState<Health | null>(null);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [zigbee, setZigbee] = useState<ZigbeeStatus | null>(null);
+  const [selectedRoomId, setSelectedRoomId] = useState<number | "home" | "unassigned">("home");
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const selectedRoom = useMemo(() => rooms.find((room) => room.id === selectedRoomId), [rooms, selectedRoomId]);
+  const unassignedDevices = devices.filter((device) => !device.roomId);
+  const roomDevices = selectedRoomId === "home"
+    ? []
+    : selectedRoomId === "unassigned"
+      ? unassignedDevices
+      : devices.filter((device) => device.roomId === selectedRoomId);
+
+  function getRoom(match: string) {
+    return rooms.find((room) => roomKey(room).includes(match));
+  }
+
+  async function load() {
+    const [healthRes, roomsRes, devicesRes, zigbeeRes] = await Promise.all([
+      fetch("/api/health"),
+      fetch("/api/rooms"),
+      fetch("/api/devices"),
+      fetch("/api/zigbee/status")
+    ]);
+
+    setHealth(await healthRes.json());
+    setRooms(await roomsRes.json());
+    setDevices(await devicesRes.json());
+    setZigbee(await zigbeeRes.json());
+  }
+
+  async function scanDevices() {
+    setBusy("scan");
+    try {
+      await fetch("/api/discovery");
+      await load();
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function togglePermitJoin() {
+    if (!zigbee) return;
+    setBusy("zigbee");
+
+    try {
+      await fetch("/api/zigbee/permit-join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: !zigbee.permitJoin })
+      });
+      await load();
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function assignRoom(deviceId: string, roomId: string) {
+    await fetch(`/api/devices/${encodeURIComponent(deviceId)}/room`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ roomId: roomId === "" ? null : Number(roomId) })
+    });
+    await load();
+  }
+
+  async function controlDevice(deviceId: string, action: "turnOn" | "turnOff" | "toggle") {
+    setBusy(deviceId);
+    try {
+      await fetch(`/api/devices/${encodeURIComponent(deviceId)}/control`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action })
+      });
+      await load();
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  useEffect(() => { load(); }, []);
+
+  const sala = getRoom("sala");
+  const cozinha = getRoom("cozinha");
+  const quartos = getRoom("quarto");
+  const banho = getRoom("banho");
+  const solar = getRoom("solar");
+
+  function count(room?: Room) {
+    return room ? devices.filter((device) => device.roomId === room.id).length : 0;
+  }
+
+  return (
+    <div className="app-shell">
+      <header className="topbar">
+        <button className="brand-button" onClick={() => setSelectedRoomId("home")}>
+          <span className="brand-mark">⌂</span>
+          <span>CasaLume</span>
+        </button>
+
+        <div className="topbar-actions">
+          <button onClick={scanDevices} disabled={busy === "scan"}>
+            {busy === "scan" ? "A procurar..." : "Procurar dispositivos"}
+          </button>
+
+          <button className="secondary" onClick={togglePermitJoin} disabled={busy === "zigbee"}>
+            Zigbee Join: {zigbee?.permitJoin ? "ON" : "OFF"}
+          </button>
+        </div>
+      </header>
+
+      {selectedRoomId === "home" && (
+        <>
+          <section className="real-house-hero">
+            <div className="hero-copy">
+              <span className="badge">CasaLume • Casa inteligente premium</span>
+              <h1>A tua casa viva.</h1>
+              <p>
+                A casa é o painel principal. Clica numa zona da fachada para abrir a divisão isolada
+                e controlar os dispositivos dessa área.
+              </p>
+            </div>
+
+            <div className="house-canvas">
+              <RealisticHouse3D
+                rooms={rooms}
+                devices={devices}
+                unassignedCount={unassignedDevices.length}
+                onSelectRoom={(roomId) => setSelectedRoomId(roomId)}
+                onSelectUnassigned={() => setSelectedRoomId("unassigned")}
+              />
+            </div>
+          </section>
+
+          <section className="home-status-grid">
+            <InfoCard title="API" value="Online" />
+            <InfoCard title="MQTT" value={health?.services?.mqtt ?? "..."} />
+            <InfoCard title="WiFi" value={health?.services?.wifiControl ?? "..."} />
+            <InfoCard title="Zigbee" value={zigbee?.bridge ?? "..."} />
+            <InfoCard title="Dispositivos" value={String(devices.length)} />
+          </section>
+        </>
+      )}
+
+      {selectedRoomId !== "home" && (
+        <>
+          <section className="room-view">
+            <button className="back-button" onClick={() => setSelectedRoomId("home")}>
+              ← Voltar à casa
+            </button>
+
+            <div className="room-scene">
+              <div className="room-scene-art">
+                <span>{selectedRoomId === "unassigned" ? "📦" : roomVisual(selectedRoom)}</span>
+              </div>
+
+              <div>
+                <span className="badge">
+                  {selectedRoomId === "unassigned" ? "Dispositivos novos" : "Divisão isolada"}
+                </span>
+
+                <h1>{selectedRoomId === "unassigned" ? "Por atribuir" : selectedRoom?.name}</h1>
+
+                <p>
+                  {selectedRoomId === "unassigned"
+                    ? "Dispositivos descobertos que ainda não foram atribuídos a nenhuma divisão."
+                    : "Vista isolada da divisão, com estados e controlos conforme o tipo do aparelho."}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <div className="section-title">
+              <h2>Dispositivos</h2>
+              <p>{roomDevices.length} dispositivos nesta vista.</p>
+            </div>
+
+            {roomDevices.length === 0 ? (
+              <div className="empty-card">Nenhum dispositivo nesta divisão.</div>
+            ) : (
+              <div className="devices-grid">
+                {roomDevices.map((device) => (
+                  <DeviceCard
+                    key={device.deviceId}
+                    device={device}
+                    rooms={rooms}
+                    busy={busy}
+                    onControl={controlDevice}
+                    onAssignRoom={assignRoom}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        </>
+      )}
+    </div>
+  );
+}
+
+function DeviceCard({
+  device,
+  rooms,
+  busy,
+  onControl,
+  onAssignRoom
+}: {
+  device: Device;
+  rooms: Room[];
+  busy: string | null;
+  onControl: (deviceId: string, action: "turnOn" | "turnOff" | "toggle") => Promise<void>;
+  onAssignRoom: (deviceId: string, roomId: string) => Promise<void>;
+}) {
+  const type = device.normalizedType ?? device.type ?? "unknown";
+  const active = isOn(device);
+  const capabilities = device.capabilities ?? [];
+  const canOnOff = capabilities.includes("onOff");
+
+  return (
+    <article className="device-card">
+      <div className="device-top">
+        <div>
+          <h3>{device.name}</h3>
+          <p>{device.brand} • {device.model}</p>
+        </div>
+
+        <span className={device.online ? "online" : "offline"}>
+          {device.online ? "online" : "offline"}
+        </span>
+      </div>
+
+      <div className="device-meta">
+        <span>{deviceTypeLabel(type)}</span>
+        <span>{device.protocol}</span>
+        <span>{device.ip}</span>
+      </div>
+
+      <div className="capabilities">
+        {capabilities.map((capability) => <span key={capability}>{capability}</span>)}
+      </div>
+
+      {canOnOff && (
+        <div className="control-panel">
+          <div className="control-state">
+            <span>Estado</span>
+            <strong>{active ? "Ligado" : "Desligado"}</strong>
+          </div>
+
+          {typeof device.power === "number" && (
+            <div className="control-state">
+              <span>Potência</span>
+              <strong>{device.power.toFixed(1)} W</strong>
+            </div>
+          )}
+
+          <div className="control-actions">
+            <button onClick={() => onControl(device.deviceId, "turnOn")} disabled={busy === device.deviceId}>Ligar</button>
+            <button onClick={() => onControl(device.deviceId, "turnOff")} disabled={busy === device.deviceId}>Desligar</button>
+            <button className="secondary" onClick={() => onControl(device.deviceId, "toggle")} disabled={busy === device.deviceId}>Alternar</button>
+          </div>
+        </div>
+      )}
+
+      <label className="select-label">
+        Divisão
+        <select value={device.roomId ?? ""} onChange={(event) => onAssignRoom(device.deviceId, event.target.value)}>
+          <option value="">Por atribuir</option>
+          {rooms.map((room) => <option key={room.id} value={room.id}>{room.name}</option>)}
+        </select>
+      </label>
+    </article>
+  );
+}
+
+function InfoCard({ title, value }: { title: string; value: string }) {
+  return (
+    <article className="info-card">
+      <h3>{title}</h3>
+      <p>{value}</p>
+    </article>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);

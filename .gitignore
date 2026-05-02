@@ -1,0 +1,13 @@
+
+# Dados runtime — não versionar
+infra/mqtt/data/
+infra/mqtt/log/
+infra/zigbee2mqtt/data/log/
+infra/zigbee2mqtt/data/database.db
+infra/zigbee2mqtt/data/state.json
+infra/zigbee2mqtt/data/coordinator_backup.json
+apps/api/data/
+backups/
+*.db
+*.db-shm
+*.db-wal

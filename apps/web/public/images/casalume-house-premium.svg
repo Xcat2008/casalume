@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">
+<defs>
+<linearGradient id="sky" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#1f2a2e"/><stop offset="100%" stop-color="#d8ddd8"/></linearGradient>
+<linearGradient id="glass" x1="0" x2="1"><stop offset="0%" stop-color="#2a2f35"/><stop offset="50%" stop-color="#f2c879"/><stop offset="100%" stop-color="#20262c"/></linearGradient>
+<filter id="shadow"><feDropShadow dx="0" dy="25" stdDeviation="18" flood-opacity="0.35"/></filter>
+</defs>
+<rect width="1600" height="900" fill="url(#sky)"/>
+<rect y="650" width="1600" height="250" fill="#1b1f1c"/>
+<g filter="url(#shadow)">
+<polygon points="180,380 780,140 1450,380 1380,430 770,220 230,430" fill="#1d2228"/>
+<polygon points="240,420 780,210 1340,420 780,600" fill="#2e353d"/>
+<rect x="280" y="430" width="1040" height="170" fill="#d9d3c2"/>
+<rect x="220" y="600" width="1160" height="190" fill="#c8c1ae"/>
+<rect x="330" y="455" width="310" height="120" fill="url(#glass)"/>
+<rect x="720" y="455" width="230" height="120" fill="url(#glass)"/>
+<rect x="1020" y="455" width="240" height="120" fill="url(#glass)"/>
+<rect x="290" y="635" width="300" height="125" fill="url(#glass)"/>
+<rect x="660" y="635" width="310" height="125" fill="url(#glass)"/>
+<rect x="1040" y="635" width="250" height="125" fill="url(#glass)"/>
+<rect x="770" y="610" width="95" height="180" fill="#5a341d"/>
+<rect x="430" y="225" width="250" height="90" fill="#111827"/>
+<rect x="710" y="180" width="280" height="100" fill="#111827"/>
+<rect x="1080" y="180" width="50" height="130" fill="#2d2d2d"/>
+</g>
+</svg>

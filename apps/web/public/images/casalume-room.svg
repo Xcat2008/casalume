@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <linearGradient id="room" x1="0" x2="1">
+      <stop offset="0" stop-color="#1b1d18"/>
+      <stop offset="1" stop-color="#d5c3a8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#room)"/>
+  <rect y="580" width="1600" height="320" fill="#8b7458"/>
+  <rect x="180" y="220" width="420" height="300" fill="#20251f"/>
+  <rect x="670" y="230" width="300" height="330" fill="#d9c8ab"/>
+  <rect x="1060" y="210" width="360" height="350" fill="#22251f"/>
+  <rect x="260" y="620" width="520" height="120" rx="25" fill="#2e342d"/>
+  <rect x="860" y="600" width="360" height="170" rx="22" fill="#4d4031"/>
+  <circle cx="1260" cy="520" r="70" fill="#f3c06a" opacity=".35"/>
+</svg>

@@ -1,0 +1,49 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: casalume-mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./infra/mqtt/config:/mosquitto/config
+      - ./infra/mqtt/data:/mosquitto/data
+      - ./infra/mqtt/log:/mosquitto/log
+
+  zigbee2mqtt:
+    image: koenkk/zigbee2mqtt:latest
+    container_name: casalume-zigbee2mqtt
+    restart: unless-stopped
+    depends_on:
+      - mosquitto
+    ports:
+      - "8080:8080"
+    devices:
+      - /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_3824bd7c6629ec11824a6c7840c9ce8d-if00-port0:/dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_3824bd7c6629ec11824a6c7840c9ce8d-if00-port0
+    volumes:
+      - ./infra/zigbee2mqtt/data:/app/data
+      - /run/udev:/run/udev:ro
+
+  api:
+    build:
+      context: ./apps/api
+    container_name: casalume-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    network_mode: host
+    volumes:
+      - ./apps/api/data:/app/data
+      - ./infra/zigbee2mqtt/data:/zigbee2mqtt-data:ro
+    depends_on:
+      - mosquitto
+
+  web:
+    build:
+      context: ./apps/web
+    container_name: casalume-web
+    restart: unless-stopped
+    ports:
+      - "4180:80"
+    depends_on:
+      - api

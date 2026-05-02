@@ -1,0 +1,20 @@
+homeassistant: false
+permit_join: false
+
+mqtt:
+  base_topic: zigbee2mqtt
+  server: mqtt://mosquitto:1883
+
+serial:
+  port: /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_3824bd7c6629ec11824a6c7840c9ce8d-if00-port0
+  adapter: zstack
+
+frontend:
+  port: 8080
+
+advanced:
+  log_level: info
+  network_key: GENERATE
+
+devices: {}
+groups: {}

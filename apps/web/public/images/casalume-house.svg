@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <linearGradient id="sky" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#101915"/>
+      <stop offset="1" stop-color="#dfe8df"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" x2="1">
+      <stop offset="0" stop-color="#141f1c"/>
+      <stop offset="0.55" stop-color="#f2c16c"/>
+      <stop offset="1" stop-color="#17211f"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="30" stdDeviation="25" flood-opacity=".45"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <rect y="620" width="1600" height="280" fill="#1b211d"/>
+  <ellipse cx="790" cy="690" rx="720" ry="120" fill="#101613" opacity=".55"/>
+  <g filter="url(#shadow)">
+    <polygon points="170,470 760,250 1440,470 1370,515 735,350 220,520" fill="#1a201d"/>
+    <polygon points="170,470 760,250 1440,470 760,590" fill="#252d29"/>
+    <polygon points="280,505 760,360 1250,505 760,650" fill="#c7c3b4"/>
+    <polygon points="235,515 760,650 760,765 235,635" fill="#d9d2bf"/>
+    <polygon points="760,650 1290,510 1290,635 760,765" fill="#b8b39f"/>
+    <rect x="330" y="520" width="310" height="160" fill="url(#glass)" opacity=".95"/>
+    <rect x="835" y="520" width="320" height="160" fill="url(#glass)" opacity=".95"/>
+    <rect x="545" y="340" width="240" height="150" fill="url(#glass)" opacity=".95"/>
+    <rect x="900" y="348" width="230" height="142" fill="url(#glass)" opacity=".95"/>
+    <rect x="680" y="538" width="130" height="230" fill="#5b351d"/>
+    <circle cx="783" cy="655" r="7" fill="#f6d28b"/>
+    <polygon points="160,455 760,160 1450,455 1410,490 760,245 200,490" fill="#222722"/>
+    <polygon points="760,160 1450,455 760,280" fill="#303833"/>
+    <polygon points="160,455 760,160 760,280 200,490" fill="#151b18"/>
+    <rect x="970" y="210" width="170" height="46" fill="#111917" opacity=".9"/>
+    <rect x="982" y="217" width="34" height="34" fill="#152b36"/>
+    <rect x="1022" y="217" width="34" height="34" fill="#152b36"/>
+    <rect x="1062" y="217" width="34" height="34" fill="#152b36"/>
+    <rect x="1102" y="217" width="28" height="34" fill="#152b36"/>
+  </g>
+  <g opacity=".8">
+    <circle cx="260" cy="690" r="55" fill="#31442f"/>
+    <circle cx="1310" cy="650" r="62" fill="#31442f"/>
+    <rect x="70" y="760" width="1460" height="34" rx="17" fill="#0d130f"/>
+    <rect x="95" y="735" width="300" height="42" rx="21" fill="#283624"/>
+    <rect x="1190" y="725" width="280" height="42" rx="21" fill="#283624"/>
+  </g>
+  <g opacity=".45">
+    <circle cx="390" cy="530" r="90" fill="#f6c16d"/>
+    <circle cx="1090" cy="510" r="80" fill="#f6c16d"/>
+  </g>
+</svg>
